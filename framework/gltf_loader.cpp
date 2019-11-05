@@ -35,6 +35,7 @@ VKBP_ENABLE_WARNINGS()
 #include "core/device.h"
 #include "core/image.h"
 #include "platform/filesystem.h"
+#include "scene_graph/components/animation.h"
 #include "scene_graph/components/camera.h"
 #include "scene_graph/components/image.h"
 #include "scene_graph/components/image/astc.h"
@@ -567,6 +568,15 @@ sg::Scene GLTFLoader::load_scene()
 	}
 
 	auto default_material = create_default_material();
+
+	// Load animations
+	for (auto &gltf_animation : model.animations)
+	{
+		auto animation = parse_animation(scene, &model, gltf_animation);
+
+		scene.add_component(std::move(animation));
+		// @todo
+	}
 
 	// Load meshes
 	auto materials = scene.get_components<sg::PBRMaterial>();
@@ -1149,6 +1159,129 @@ std::unique_ptr<sg::Sampler> GLTFLoader::parse_sampler(const tinygltf::Sampler &
 std::unique_ptr<sg::Texture> GLTFLoader::parse_texture(const tinygltf::Texture &gltf_texture) const
 {
 	return std::make_unique<sg::Texture>(gltf_texture.name);
+}
+
+std::unique_ptr<sg::Animation> GLTFLoader::parse_animation(sg::Scene &scene, const tinygltf::Model *model, const tinygltf::Animation &gltf_animation) const
+{
+	auto name = gltf_animation.name;
+
+	auto animation = std::make_unique<sg::Animation>(gltf_animation.name);
+
+	for (auto &gltf_animation_sampler : gltf_animation.samplers)
+	{
+		sg::AnimationSampler animation_sampler{};
+
+		if (gltf_animation_sampler.interpolation == "LINEAR")
+		{
+			animation_sampler.interpolation = sg::AnimationSampler::InterpolationType::LINEAR;
+		}
+		if (gltf_animation_sampler.interpolation == "STEP")
+		{
+			animation_sampler.interpolation = sg::AnimationSampler::InterpolationType::STEP;
+		}
+		if (gltf_animation_sampler.interpolation == "CUBICSPLINE")
+		{
+			animation_sampler.interpolation = sg::AnimationSampler::InterpolationType::CUBICSPLINE;
+		}
+
+		// Read sampler input time values
+		{
+			const tinygltf::Accessor &  accessor   = model->accessors[gltf_animation_sampler.input];
+			const tinygltf::BufferView &bufferView = model->bufferViews[accessor.bufferView];
+			const tinygltf::Buffer &    buffer     = model->buffers[bufferView.buffer];
+			const void *                dataPtr    = &buffer.data[accessor.byteOffset + bufferView.byteOffset];
+			const float *               buf        = static_cast<const float *>(dataPtr);
+			for (size_t index = 0; index < accessor.count; index++)
+			{
+				animation_sampler.inputs.push_back(buf[index]);
+			}
+
+			// Get start and end time values for this animation
+			for (auto input : animation_sampler.inputs)
+			{
+				if (input < animation->start)
+				{
+					animation->start = input;
+				};
+				if (input > animation->end)
+				{
+					animation->end = input;
+				}
+			}
+		}
+
+		// Read sampler output T/R/S values
+		{
+			const tinygltf::Accessor &  accessor   = model->accessors[gltf_animation_sampler.output];
+			const tinygltf::BufferView &bufferView = model->bufferViews[accessor.bufferView];
+			const tinygltf::Buffer &    buffer     = model->buffers[bufferView.buffer];
+			const void *                dataPtr    = &buffer.data[accessor.byteOffset + bufferView.byteOffset];
+			switch (accessor.type)
+			{
+				case TINYGLTF_TYPE_VEC3:
+				{
+					const glm::vec3 *buf = static_cast<const glm::vec3 *>(dataPtr);
+					for (size_t index = 0; index < accessor.count; index++)
+					{
+						animation_sampler.outputsVec4.push_back(glm::vec4(buf[index], 0.0f));
+						animation_sampler.outputs.push_back(buf[index][0]);
+						animation_sampler.outputs.push_back(buf[index][1]);
+						animation_sampler.outputs.push_back(buf[index][2]);
+					}
+					break;
+				}
+				case TINYGLTF_TYPE_VEC4:
+				{
+					const glm::vec4 *buf = static_cast<const glm::vec4 *>(dataPtr);
+					for (size_t index = 0; index < accessor.count; index++)
+					{
+						animation_sampler.outputsVec4.push_back(buf[index]);
+						animation_sampler.outputs.push_back(buf[index][0]);
+						animation_sampler.outputs.push_back(buf[index][1]);
+						animation_sampler.outputs.push_back(buf[index][2]);
+						animation_sampler.outputs.push_back(buf[index][3]);
+					}
+					break;
+				}
+				default:
+				{
+					LOGI("Skipping Unknown animation sampler type");
+					break;
+				}
+			}
+		}
+
+		animation->animation_samplers.push_back(animation_sampler);
+	}
+
+	for (auto &gltf_animation_channel : gltf_animation.channels)
+	{
+		sg::AnimationChannel animation_channel{};
+
+		if (gltf_animation_channel.target_path == "rotation")
+		{
+			animation_channel.path = sg::AnimationChannel::PathType::ROTATION;
+		}
+		if (gltf_animation_channel.target_path == "translation")
+		{
+			animation_channel.path = sg::AnimationChannel::PathType::TRANSLATION;
+		}
+		if (gltf_animation_channel.target_path == "scale")
+		{
+			animation_channel.path = sg::AnimationChannel::PathType::SCALE;
+		}
+		if (gltf_animation_channel.target_path == "weights")
+		{
+			LOGI("Skipping animation channel, weights not yet");
+			continue;
+		}
+		
+		animation_channel.samplerIndex = gltf_animation_channel.sampler;
+		animation_channel.node         = scene.find_node(gltf_animation_channel.target_node);
+		animation->animation_channels.push_back(animation_channel);
+	}
+
+	return animation;
 }
 
 std::unique_ptr<sg::PBRMaterial> GLTFLoader::create_default_material()

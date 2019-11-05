@@ -43,6 +43,7 @@ class PBRMaterial;
 class Sampler;
 class SubMesh;
 class Texture;
+class Animation;
 }        // namespace sg
 
 /**
@@ -92,6 +93,8 @@ class GLTFLoader
 	virtual std::unique_ptr<sg::Sampler> parse_sampler(const tinygltf::Sampler &gltf_sampler) const;
 
 	virtual std::unique_ptr<sg::Texture> parse_texture(const tinygltf::Texture &gltf_texture) const;
+
+	virtual std::unique_ptr<sg::Animation> parse_animation(sg::Scene &scene, const tinygltf::Model *model, const tinygltf::Animation &gltf_animation) const;
 
 	virtual std::unique_ptr<sg::PBRMaterial> create_default_material();
 
