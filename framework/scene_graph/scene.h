@@ -112,6 +112,7 @@ class Scene
 	bool has_component(const std::type_index &type_info) const;
 
 	Node *find_node(const std::string &name);
+	Node *find_node(const int id);
 
   private:
 	std::string name;

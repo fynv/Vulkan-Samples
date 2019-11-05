@@ -129,5 +129,32 @@ Node *Scene::find_node(const std::string &node_name)
 
 	return nullptr;
 }
+
+Node *Scene::find_node(const int id)
+{
+	for (auto root_node : children)
+	{
+		std::queue<sg::Node *> traverse_nodes{};
+		traverse_nodes.push(root_node);
+
+		while (!traverse_nodes.empty())
+		{
+			auto node = traverse_nodes.front();
+			traverse_nodes.pop();
+
+			if (node->get_id() == id)
+			{
+				return node;
+			}
+
+			for (auto child_node : node->get_children())
+			{
+				traverse_nodes.push(child_node);
+			}
+		}
+	}
+
+	return nullptr;
+}
 }        // namespace sg
 }        // namespace vkb
