@@ -569,15 +569,6 @@ sg::Scene GLTFLoader::load_scene()
 
 	auto default_material = create_default_material();
 
-	// Load animations
-	for (auto &gltf_animation : model.animations)
-	{
-		auto animation = parse_animation(scene, &model, gltf_animation);
-
-		scene.add_component(std::move(animation));
-		// @todo
-	}
-
 	// Load meshes
 	auto materials = scene.get_components<sg::PBRMaterial>();
 
@@ -785,6 +776,15 @@ sg::Scene GLTFLoader::load_scene()
 
 		scene.add_child(*root_node);
 		nodes.push_back(std::move(root_node));
+	}
+
+	// Load animations
+	// @todo: per scene?
+	for (auto &gltf_animation : model.animations)
+	{
+		auto animation = parse_animation(scene, &model, gltf_animation);
+
+		scene.add_component(std::move(animation));
 	}
 
 	// Store nodes into the scene
