@@ -147,19 +147,19 @@ void Animation::update(float delta_time)
 		{
 			if ((current_time >= animation_sampler.inputs[i]) && (current_time <= animation_sampler.inputs[i + 1]))
 			{
-				float u = std::max(0.0f, delta_time - animation_sampler.inputs[i]) / (animation_sampler.inputs[i + 1] - animation_sampler.inputs[i]);
+				float u = std::max(0.0f, current_time - animation_sampler.inputs[i]) / (animation_sampler.inputs[i + 1] - animation_sampler.inputs[i]);
 				if (u <= 1.0f)
 				{
 					switch (animation_channel.path)
 					{
 						case sg::AnimationChannel::PathType::TRANSLATION:
-							animation_sampler.translate(i, delta_time, *animation_channel.node);
+							animation_sampler.translate(i, current_time, *animation_channel.node);
 							break;
 						case sg::AnimationChannel::PathType::SCALE:
-							animation_sampler.scale(i, delta_time, *animation_channel.node);
+							animation_sampler.scale(i, current_time, *animation_channel.node);
 							break;
 						case sg::AnimationChannel::PathType::ROTATION:
-							animation_sampler.rotate(i, delta_time, *animation_channel.node);
+							animation_sampler.rotate(i, current_time, *animation_channel.node);
 					}
 					updated = true;
 				}
