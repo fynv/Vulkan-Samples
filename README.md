@@ -36,6 +36,8 @@
 - [Contributions](#contributions)
 - [Related resources](#related-resources)
 
+![Travis CI](https://travis-ci.org/SaschaWillems/Vulkan-Samples.svg?branch=master)
+
 ## Introduction
 
 The Vulkan Samples is collection of resources to help you develop optimized Vulkan applications.
