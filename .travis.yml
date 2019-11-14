@@ -51,21 +51,21 @@ jobs:
         - docker exec VKB sh -c "cd /home/vulkan-samples && python3 /usr/local/bin/snake_case.py master > ./snake-report.txt"
         - docker exec VKB sh -c "cd /home/vulkan-samples && if [ $(grep -c '@@' ./snake-report.txt) -gt 0 ]; then cat ./snake-report.txt; exit 1; fi"
     - stage: Build
+    - script:
+        - cmake -G"Visual Studio 15 2017 Win64" -H. -Bbuild -DVKB_BUILD_TESTS:BOOL=ON -DVKB_BUILD_SAMPLES:BOOL=ON
+        - cmake --build build --target vulkan_samples --config Release
       name: Build Windows
       language: shell
       os: windows
     - script:
-        - cmake -G"Visual Studio 15 2017 Win64" -H. -Bbuild -DVKB_BUILD_TESTS:BOOL=ON -DVKB_BUILD_SAMPLES:BOOL=ON
-        - cmake --build build --target vulkan_samples --config Release
-      name: Build Linux
-      language: shell
-      os: linux
-    - script:
       - docker exec VKB sh -c "cd /home/vulkan-samples && cmake -G \"Unix Makefiles\" -H. -Bbuild -DCMAKE_TOOLCHAIN_FILE=bldsys/toolchain/android_gradle.cmake -DVKB_BUILD_TESTS=ON -DVKB_BUILD_SAMPLES=ON"
       - docker exec VKB sh -c "cd /home/vulkan-samples && cmake --build build --config Release --target vulkan_samples_package -- -j$(($(nproc)/2+1))"
-      name: Build Android
+      name: Build Linux
       language: shell
       os: linux
     - script:
       - docker exec VKB sh -c "cd /home/vulkan-samples && cmake -G \"Unix Makefiles\" -H. -Bbuild/linux -DCMAKE_BUILD_TYPE=Release -DVKB_BUILD_TESTS=ON -DVKB_BUILD_SAMPLES=ON"
       - docker exec VKB sh -c "cd /home/vulkan-samples && cmake --build build/linux --target vulkan_samples --config Release -- -j$(($(nproc)/2+1))"
+      name: Build Android
+      language: shell
+      os: linux
