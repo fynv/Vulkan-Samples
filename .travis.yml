@@ -63,7 +63,7 @@ jobs:
     - script:
       - docker exec VKB sh -c "cd /home/vulkan-samples && cmake -G \"Unix Makefiles\" -H. -Bbuild -DCMAKE_TOOLCHAIN_FILE=bldsys/toolchain/android_gradle.cmake -DVKB_BUILD_TESTS=ON -DVKB_BUILD_SAMPLES=ON"
       - docker exec VKB sh -c "cd /home/vulkan-samples && cmake --build build --config Release --target vulkan_samples_package -- -j$(($(nproc)/2+1))"
-    - name: Build Android
+      name: Build Android
       language: shell
       os: linux
     - script:
