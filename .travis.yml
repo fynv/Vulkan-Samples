@@ -50,7 +50,6 @@ jobs:
     - script:
         - docker exec VKB sh -c "cd /home/vulkan-samples && python3 /usr/local/bin/snake_case.py master > ./snake-report.txt"
         - docker exec VKB sh -c "cd /home/vulkan-samples && if [ $(grep -c '@@' ./snake-report.txt) -gt 0 ]; then cat ./snake-report.txt; exit 1; fi"
-
     - stage: Build
       name: Build Windows
       language: shell
@@ -70,4 +69,3 @@ jobs:
     - script:
       - docker exec VKB sh -c "cd /home/vulkan-samples && cmake -G \"Unix Makefiles\" -H. -Bbuild/linux -DCMAKE_BUILD_TYPE=Release -DVKB_BUILD_TESTS=ON -DVKB_BUILD_SAMPLES=ON"
       - docker exec VKB sh -c "cd /home/vulkan-samples && cmake --build build/linux --target vulkan_samples --config Release -- -j$(($(nproc)/2+1))"
-
