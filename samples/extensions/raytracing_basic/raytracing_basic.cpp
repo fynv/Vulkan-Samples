@@ -599,16 +599,19 @@ void RaytracingBasic::build_command_buffers()
 		VkStridedBufferRegionKHR raygen_shader_sbt_entry{};
 		raygen_shader_sbt_entry.buffer = shader_binding_table->get_handle();
 		raygen_shader_sbt_entry.offset = static_cast<VkDeviceSize>(ray_tracing_properties.shaderGroupHandleSize * INDEX_RAYGEN);
+		raygen_shader_sbt_entry.stride = ray_tracing_properties.shaderGroupHandleSize;
 		raygen_shader_sbt_entry.size   = ray_tracing_properties.shaderGroupHandleSize;
 
 		VkStridedBufferRegionKHR miss_shader_sbt_entry{};
 		miss_shader_sbt_entry.buffer = shader_binding_table->get_handle();
 		miss_shader_sbt_entry.offset = static_cast<VkDeviceSize>(ray_tracing_properties.shaderGroupHandleSize * INDEX_MISS);
+		miss_shader_sbt_entry.stride = ray_tracing_properties.shaderGroupHandleSize;
 		miss_shader_sbt_entry.size   = ray_tracing_properties.shaderGroupHandleSize;
 
 		VkStridedBufferRegionKHR hit_shader_sbt_entry{};
 		hit_shader_sbt_entry.buffer = shader_binding_table->get_handle();
 		hit_shader_sbt_entry.offset = static_cast<VkDeviceSize>(ray_tracing_properties.shaderGroupHandleSize * INDEX_CLOSEST_HIT);
+		hit_shader_sbt_entry.stride = ray_tracing_properties.shaderGroupHandleSize;
 		hit_shader_sbt_entry.size   = ray_tracing_properties.shaderGroupHandleSize;
 
 		VkStridedBufferRegionKHR callable_shader_sbt_entry{};
